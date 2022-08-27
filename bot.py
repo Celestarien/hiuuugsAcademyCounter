@@ -6,29 +6,21 @@ user_exist = 0
 
 def delete_line(user):
     fn = 'data'
-    f = open(fn)
-    output = []
-    for line in f:
-        if not line.startswith(user):
-            output.append(line)
-    f.close()
-    f = open(fn, 'w')
-    f.writelines(output)
-    f.close()
+    with open(fn) as f:
+        output = [line for line in f if not line.startswith(user)]
+    with open(fn, 'w') as f:
+        f.writelines(output)
 
 
 def calcul_tips(don):
     don = float(don.replace(',', '.'))
-    # print(str(don))
-    points = format(don * 0.3334, '.4f')
     # print(str(points))
-    return points
+    return format(don * 0.3334, '.4f')
 
 
 def calcul_cheers(cheers):
-    points = format(cheers * 0.0034, '.4f')
     # print(str(points))
-    return points
+    return format(cheers * 0.0034, '.4f')
 
 
 def write_file(user, points):
@@ -40,17 +32,17 @@ def write_file(user, points):
     for line in Lines:
         line_split = line.split(':')
         user_list = line_split[0]
-        if(user == user_list):
+        if (user == user_list):
             old_points = line_split[1]
             total_points = float(old_points) + float(points)
-            newLine = user + ': ' + str(total_points)
+            newLine = f'{user}: {str(total_points)}'
             delete_line(user)
             data.write(newLine + '\n')
             user_exist = 1
-            print(user + ': ' + str(total_points))
-    if(user_exist != 1):
-        data.write(user + ':' + str(points) + '\n')
-        print(user + ': ' + str(points))
+            print(f'{user}: {str(total_points)}')
+    if (user_exist != 1):
+        data.write(f'{user}:{str(points)}' + '\n')
+        print(f'{user}: {str(points)}')
     user_exist = 0
 
 
@@ -75,58 +67,59 @@ async def event_ready():
 async def event_message(message):
     # StreamLabs:
     # Don
-    if(message.author.name == 'celestarien' or message.author.name == 'streamlabs'):
-        if(message.content.find('just tipped') != -1):
-            msg = message.content
-            msg_split = msg.split('just tipped')
-            user = msg_split[0]
-            don = msg_split[1].replace('€', '')
-            points = calcul_tips(don)
-            # data = user + ':' + don
-            write_file(user, points)
+    if message.author.name in ['celestarien', 'streamlabs'] and (
+        message.content.find('just tipped') != -1
+    ):
+        msg = message.content
+        msg_split = msg.split('just tipped')
+        user = msg_split[0]
+        don = msg_split[1].replace('€', '')
+        points = calcul_tips(don)
+        # data = user + ':' + don
+        write_file(user, points)
 
     # Sub
     # exemple: kaleb8653 just subscribed with Tier 1!
-    if(message.author.name == 'celestarien' or message.author.name == 'streamlabs'):
-        # "!= -1" car -1 est la valeur que ça renvois si la string n'est pas trouvée
-        if(message.content.find('just subscribed with Tier') != -1):
-            msg = message.content
-            msg_split = msg.split('just subscribed with Tier')
-            user = msg_split[0]
-            tier = msg_split[1].replace('!', '')
-            points = float(tier)
-            # data = user + ':' + don
-            write_file(user, points)
+    if message.author.name in ['celestarien', 'streamlabs'] and (
+        message.content.find('just subscribed with Tier') != -1
+    ):
+        msg = message.content
+        msg_split = msg.split('just subscribed with Tier')
+        user = msg_split[0]
+        tier = msg_split[1].replace('!', '')
+        points = float(tier)
+        # data = user + ':' + don
+        write_file(user, points)
 
     # Cheers
     # exemple: ashitaka13400 has cheered 100 bits!
-    if(message.author.name == 'celestarien' or message.author.name == 'streamlabs'):
-        # "!= -1" car -1 est la valeur que ça renvois si la string n'est pas trouvée
-        if(message.content.find('has cheered') != -1):
-            msg = message.content
-            msg_split = msg.split('has cheered')
-            user = msg_split[0]
-            cheers = msg_split[1].replace('bits!', '')
-            points = calcul_cheers(float(cheers))
-            # data = user + ':' + don
-            write_file(user, points)
+    if message.author.name in ['celestarien', 'streamlabs'] and (
+        message.content.find('has cheered') != -1
+    ):
+        msg = message.content
+        msg_split = msg.split('has cheered')
+        user = msg_split[0]
+        cheers = msg_split[1].replace('bits!', '')
+        points = calcul_cheers(float(cheers))
+        # data = user + ':' + don
+        write_file(user, points)
 
     # Sub Gift
     # exemple: inos___ just gifted Tier 1 subscriptions! (le nombre de gifts n'est pas indiqué)
 
     # SoundAlerts:
     # exemple: stiffmaester51 played You suck for 100 Bits
-    if(message.author.name == 'celestarien' or message.author.name == 'soundalerts'):
-        # "!= -1" car -1 est la valeur que ça renvois si la string n'est pas trouvée
-        if(message.content.find('played') != -1):
-            msg = message.content
-            msg_split = msg.split('played')
-            user = msg_split[0]
-            msg_split_bits = msg_split[1].split('for')
-            cheers = msg_split_bits[1].lower().replace('bits', '')
-            points = calcul_cheers(float(cheers))
-            # data = user + ':' + don
-            write_file(user, points)
+    if message.author.name in ['celestarien', 'soundalerts'] and (
+        message.content.find('played') != -1
+    ):
+        msg = message.content
+        msg_split = msg.split('played')
+        user = msg_split[0]
+        msg_split_bits = msg_split[1].split('for')
+        cheers = msg_split_bits[1].lower().replace('bits', '')
+        points = calcul_cheers(float(cheers))
+        # data = user + ':' + don
+        write_file(user, points)
 
     # If you override event_message you will need to handle_commands for commands to work.
     await bot.handle_commands(message)
